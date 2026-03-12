@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping({"/auth"})
 @CrossOrigin({"*"})
@@ -25,6 +27,25 @@ public class UserController {
                         "User registered successfully",
                         200
                 )
+        );
+    }
+
+    @PostMapping("/login")
+    private ResponseEntity<ApiResponse> loginUser(@RequestBody UserDto userDTO) {
+        Map<String, String> tokens = userService.login(userDTO);
+        return ResponseEntity.ok(
+                new ApiResponse(tokens, "Login successful", 200)
+        );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse> refresh(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refreshToken");
+
+        String newAccessToken = userService.refreshAccessToken(refreshToken);
+
+        return ResponseEntity.ok(
+                new ApiResponse( newAccessToken,"Token refreshed successfully", 200)
         );
     }
 

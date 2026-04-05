@@ -16,6 +16,7 @@ public class ZoneController {
     @Autowired
     private ZoneService zoneService;
 
+
     @PostMapping
     public ResponseEntity<ApiResponse> createZone(@RequestBody ZoneDTO zoneDTO) {
         return ResponseEntity.ok(
@@ -23,6 +24,17 @@ public class ZoneController {
                         201,
                         "Zone created",
                         zoneService.saveZone(zoneDTO)
+                )
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse> getAllZones() {
+        return ResponseEntity.ok(
+                new ApiResponse(
+                        200,
+                        "Success",
+                        zoneService.getAllZones()
                 )
         );
     }

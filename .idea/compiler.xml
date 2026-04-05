@@ -10,6 +10,7 @@
         <module name="api-gateway" />
         <module name="config-server" />
         <module name="Zone-Service" />
+        <module name="sensor-service" />
         <module name="service-registry" />
       </profile>
       <profile name="Annotation profile for AuthService" enabled="true">
@@ -30,6 +31,7 @@
       <module name="Zone-Service" options="-parameters" />
       <module name="api-gateway" options="-parameters" />
       <module name="config-server" options="-parameters" />
+      <module name="sensor-service" options="-parameters" />
       <module name="service-registry" options="-parameters" />
     </option>
   </component>

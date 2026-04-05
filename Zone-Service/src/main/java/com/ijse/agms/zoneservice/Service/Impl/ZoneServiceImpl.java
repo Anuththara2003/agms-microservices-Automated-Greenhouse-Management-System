@@ -1,4 +1,4 @@
-package com.ijse.agms.zoneservice.Impl;
+package com.ijse.agms.zoneservice.Service.Impl;
 
 import com.ijse.agms.zoneservice.DTO.ZoneDTO;
 import com.ijse.agms.zoneservice.Entity.Zone;
@@ -7,6 +7,9 @@ import com.ijse.agms.zoneservice.repository.ZoneRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ZoneServiceImpl implements ZoneService {
@@ -116,5 +119,14 @@ public class ZoneServiceImpl implements ZoneService {
         zoneRepository.deleteById(id);
         return true;
 
+    }
+
+
+    @Override
+    public List<ZoneDTO> getAllZones() {
+        List<Zone> zones = zoneRepository.findAll();
+        return zones.stream()
+                .map(zone -> modelMapper.map(zone, ZoneDTO.class))
+                .collect(Collectors.toList());
     }
 }

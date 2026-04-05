@@ -1,80 +1,59 @@
 package com.ijse.agms.sensorservice.task;
 
-import com.ijse.agms.sensorservice.Client.ZoneClient;
 import com.ijse.agms.sensorservice.Controller.SensorController;
-import com.ijse.agms.sensorservice.Impl.ExternalAuthServiceImpl;
 import com.ijse.agms.sensorservice.dto.TelemetryData;
+import com.ijse.agms.sensorservice.dto.TelemetryValue;
 import com.ijse.agms.sensorservice.dto.ZoneDTO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
-import java.net.http.HttpHeaders;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
 public class TelemetryFetcher {
 
     @Autowired
-    private ExternalAuthServiceImpl authService;
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
     private SensorController sensorController;
-
-    @Autowired
-    private ZoneClient zoneClient;
-
-    @Value("${external.iot.base-url}")
-    private String baseUrl;
 
     @Scheduled(fixedRate = 10000)
     public void fetch() {
-        List<ZoneDTO> zones;
         try {
-            zones = zoneClient.getAllZones();
-        } catch (Exception e) {
-            System.err.println("Could not fetch zones from zone-service: " + e.getMessage());
-            return;
-        }
+            System.out.println("--- Starting Telemetry Fetch Cycle (MOCKED) ---");
 
-        if (zones == null || zones.isEmpty()) return;
 
-        String token = authService.getAccessToken();
-        if (token == null) return;
 
-        for (ZoneDTO zone : zones) {
-            String deviceId = zone.getDeviceId();
+            List<ZoneDTO> zones = new ArrayList<>();
+            zones.add(new ZoneDTO("1", "Tomato Zone", 20.5, 30.0, "DEV-001"));
+            zones.add(new ZoneDTO("2", "Orchid Zone", 18.0, 25.0, "DEV-002"));
 
-            if (deviceId == null || deviceId.isEmpty()) continue;
+            for (ZoneDTO zone : zones) {
 
-            String url = baseUrl + "/devices/telemetry/" + deviceId;
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + token);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+                TelemetryData data = new TelemetryData();
+                TelemetryValue value = new TelemetryValue();
 
-            try {
-                ResponseEntity<TelemetryData> response = restTemplate.exchange(url, HttpMethod.GET, entity, TelemetryData.class);
+                double randomTemp = 22 + (Math.random() * 13);
+                double randomHum = 50 + (Math.random() * 20);
 
-                if (response.getStatusCode() == HttpStatus.OK) {
-                    TelemetryData data = response.getBody();
+                value.setTemperature(Math.round(randomTemp * 100.0) / 100.0);
+                value.setHumidity(Math.round(randomHum * 100.0) / 100.0);
 
-                    sensorController.updateReading(zone.getId(), data);
+                data.setValue(value);
+                data.setZoneId(zone.getId().toString());
+                data.setDeviceId(zone.getDeviceId());
 
-                    System.out.println("Zone: " + zone.getName() + " | Temp: " + data.getValue().getTemperature());
+                sensorController.updateReading(zone.getId(), data);
 
-                }
-            } catch (Exception e) {
-                System.err.println("Error fetching for device " + deviceId + ": " + e.getMessage());
+                System.out.println("MOCK DATA -> Zone: " + zone.getName() +
+                        " | Temp: " + value.getTemperature() + "°C" +
+                        " | Hum: " + value.getHumidity() + "%");
             }
+            System.out.println("--- Fetch Cycle Completed ---");
+
+        } catch (Exception e) {
+            System.err.println("Critical error in TelemetryFetcher: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.ijse.agms.sensorservice.Controller;
 
+import com.ijse.agms.sensorservice.ExternalAuthService.ExternalAuthService;
 import com.ijse.agms.sensorservice.dto.DeviceDTO;
 import com.ijse.agms.sensorservice.dto.TelemetryData;
 import org.springframework.beans.factory.annotation.Autowired;

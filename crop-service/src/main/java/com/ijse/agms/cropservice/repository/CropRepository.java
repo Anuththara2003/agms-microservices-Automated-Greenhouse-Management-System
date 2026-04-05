@@ -1,4 +1,11 @@
 package com.ijse.agms.cropservice.repository;
 
-public interface CropRepository {
+import com.ijse.agms.cropservice.entity.Crop;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface CropRepository extends JpaRepository<Crop, String> {
+    List<Crop> findByUserId(String userId);
+
 }

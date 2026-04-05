@@ -3,7 +3,7 @@ package com.ijse.agms.automationservice.controller;
 
 import com.ijse.agms.automationservice.dto.TelemetryData;
 import com.ijse.agms.automationservice.entity.AutomationLog;
-import com.ijse.agms.automationservice.services.impl.AutomationService;
+import com.ijse.agms.automationservice.services.AutomationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

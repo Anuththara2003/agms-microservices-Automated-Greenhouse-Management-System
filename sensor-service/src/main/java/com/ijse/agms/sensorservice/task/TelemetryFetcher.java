@@ -1,71 +1,88 @@
 package com.ijse.agms.sensorservice.task;
 
 import com.ijse.agms.sensorservice.Client.AutomationClient;
-import com.ijse.agms.sensorservice.Controller.SensorController;
-import com.ijse.agms.sensorservice.dto.TelemetryData;
-import com.ijse.agms.sensorservice.dto.TelemetryValue;
-import com.ijse.agms.sensorservice.dto.ZoneDTO;
+import com.ijse.agms.sensorservice.Client.ZoneClient;
+import com.ijse.agms.sensorservice.Impl.ExternalAuthServiceImpl;
+import com.ijse.agms.sensorservice.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
+import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Component
 public class TelemetryFetcher {
 
     @Autowired
-    private SensorController sensorController;
+    private ZoneClient zoneClient;
+
+    @Autowired
+    private ExternalAuthServiceImpl authService;
 
     @Autowired
     private AutomationClient automationClient;
 
+    @Value("${external.iot.base-url}")
+    private String baseUrl;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
     @Scheduled(fixedRate = 10000)
     public void fetch() {
-        try {
-            System.out.println("--- Starting Telemetry Fetch Cycle (MOCKED) ---");
+        System.out.println("--- Starting Real Telemetry Fetch Cycle ---");
 
 
-            List<ZoneDTO> zones = new ArrayList<>();
-            zones.add(new ZoneDTO("1", "Tomato Zone", 20.5, 30.0, "DEV-001"));
-            zones.add(new ZoneDTO("2", "Orchid Zone", 18.0, 25.0, "DEV-002"));
-
-            for (ZoneDTO zone : zones) {
-
-                TelemetryData data = new TelemetryData();
-                TelemetryValue value = new TelemetryValue();
-
-                double randomTemp = 22 + (Math.random() * 13);
-                double randomHum = 50 + (Math.random() * 20);
-
-                value.setTemperature(Math.round(randomTemp * 100.0) / 100.0);
-                value.setHumidity(Math.round(randomHum * 100.0) / 100.0);
-
-                data.setValue(value);
-                data.setZoneId(zone.getId());
-                data.setDeviceId(zone.getDeviceId());
+        ApiResponse zoneResponse = zoneClient.getAllZones();
+        if (zoneResponse == null || zoneResponse.getData() == null) return;
 
 
-                sensorController.updateReading(zone.getId(), data);
+        List<java.util.Map<String, Object>> zones = (List<java.util.Map<String, Object>>) zoneResponse.getData();
 
 
-                try {
-                    automationClient.sendToAutomation(data);
-                    System.out.println(">>> Successfully Pushed to Automation Service for Zone: " + zone.getName());
-                } catch (Exception e) {
-                    System.err.println("!!! Failed to push to Automation Service: " + e.getMessage());
+        String token = authService.getAccessToken();
+
+        for (java.util.Map<String, Object> zone : zones) {
+            String deviceId = (String) zone.get("deviceId");
+            String zoneId = String.valueOf(zone.get("id"));
+
+            if (deviceId == null) continue;
+
+            try {
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.setBearerAuth(token);
+                HttpEntity<String> entity = new HttpEntity<>(headers);
+
+                String url = baseUrl + "/devices/telemetry/" + deviceId;
+                ResponseEntity<TelemetryData> response = restTemplate.exchange(url, HttpMethod.GET, entity, TelemetryData.class);
+
+                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                    TelemetryData realData = response.getBody();
+                    realData.setZoneId(zoneId);
+                    automationClient.sendToAutomation(realData);
+                    System.out.println("SUCCESS: Real Data fetched for Zone " + zoneId);
+                    continue;
                 }
-
-                System.out.println("MOCK DATA -> Zone: " + zone.getName() +
-                        " | Temp: " + value.getTemperature() + "°C" +
-                        " | Hum: " + value.getHumidity() + "%");
+            } catch (Exception e) {
+                System.err.println("External API unreachable for device " + deviceId + ". Switching to Mock Data.");
             }
-            System.out.println("--- Fetch Cycle Completed ---");
 
-        } catch (Exception e) {
-            System.err.println("Critical error in TelemetryFetcher: " + e.getMessage());
-            e.printStackTrace();
+
+            sendMockData(zoneId, deviceId);
         }
+    }
+
+    private void sendMockData(String zoneId, String deviceId) {
+        TelemetryData mockData = new TelemetryData();
+        TelemetryValue val = new TelemetryValue();
+        val.setTemperature(25 + (Math.random() * 10));
+        val.setHumidity(60.0);
+        mockData.setValue(val);
+        mockData.setZoneId(zoneId);
+        mockData.setDeviceId(deviceId);
+        automationClient.sendToAutomation(mockData);
+        System.out.println("MOCKED: Data sent for Zone " + zoneId + " (External API Down)");
     }
 }

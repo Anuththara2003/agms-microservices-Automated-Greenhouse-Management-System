@@ -1,5 +1,6 @@
 package com.ijse.agms.sensorservice.task;
 
+import com.ijse.agms.sensorservice.Client.AutomationClient;
 import com.ijse.agms.sensorservice.Controller.SensorController;
 import com.ijse.agms.sensorservice.dto.TelemetryData;
 import com.ijse.agms.sensorservice.dto.TelemetryValue;
@@ -17,11 +18,13 @@ public class TelemetryFetcher {
     @Autowired
     private SensorController sensorController;
 
+    @Autowired
+    private AutomationClient automationClient;
+
     @Scheduled(fixedRate = 10000)
     public void fetch() {
         try {
             System.out.println("--- Starting Telemetry Fetch Cycle (MOCKED) ---");
-
 
 
             List<ZoneDTO> zones = new ArrayList<>();
@@ -40,10 +43,19 @@ public class TelemetryFetcher {
                 value.setHumidity(Math.round(randomHum * 100.0) / 100.0);
 
                 data.setValue(value);
-                data.setZoneId(zone.getId().toString());
+                data.setZoneId(zone.getId());
                 data.setDeviceId(zone.getDeviceId());
 
+
                 sensorController.updateReading(zone.getId(), data);
+
+
+                try {
+                    automationClient.sendToAutomation(data);
+                    System.out.println(">>> Successfully Pushed to Automation Service for Zone: " + zone.getName());
+                } catch (Exception e) {
+                    System.err.println("!!! Failed to push to Automation Service: " + e.getMessage());
+                }
 
                 System.out.println("MOCK DATA -> Zone: " + zone.getName() +
                         " | Temp: " + value.getTemperature() + "°C" +

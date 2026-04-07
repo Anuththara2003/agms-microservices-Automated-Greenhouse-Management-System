@@ -1,70 +1,61 @@
-# Automated Greenhouse Management System (AGMS)
+🌿 Automated Greenhouse Management System (AGMS)
 
-AGMS is a cloud-native, microservices-based platform designed for modern precision agriculture. The system automates climate control by fetching real-time telemetry from external IoT sensors and applying custom business rules to maintain ideal growing conditions.
+The Automated Greenhouse Management System (AGMS) is a high-performance, cloud-native microservices platform designed for precision agriculture. The system automates climate monitoring and control by integrating real-time telemetry from IoT sensors with an intelligent rule engine to ensure optimal crop growth conditions.
 
-## 🚀 System Architecture
-The system is built using the Spring Cloud ecosystem and follows a distributed microservices architecture:
+🏗️ System Architecture
 
-- **Infrastructure Services:** Service Discovery (Eureka), Centralized Configuration (Spring Cloud Config), and API Gateway.
-- **Domain Microservices:** Auth Service, Zone Management Service, Sensor Telemetry Service, Automation Service, and Crop Inventory Service.
+The platform is built using the Spring Cloud ecosystem, following a decoupled architecture for maximum scalability and resilience.
 
-## 🛠️ Prerequisites
-- **Java:** Version 21
-- **Build Tool:** Maven
-- **Database:** MySQL (Ensure MySQL is running and databases are created)
-- **Centralized Config Repository:** (https://github.com/Anuththara2003/agms-microservices-Automated-Greenhouse-Management-System)]
+🛠️ Infrastructure Services
 
-## 🏁 Startup Instructions (Step-by-Step)
-To ensure the system functions correctly, the services **must** be started in the following specific order:
+Service Registry (Netflix Eureka): Centralized service discovery for dynamic microservice networking.
+Config Server (Spring Cloud Config): Centralized configuration management using a remote Git repository.
+API Gateway (Spring Cloud Gateway): The unified entry point for all client traffic, providing dynamic routing and JWT-based security.
 
-### Step 1: Infrastructure Services (Start First)
-1. **Service Registry (Eureka Server)**
-   - **Folder:** `service-registry` | **Port:** `8761`
-   - Wait for the dashboard at (http://localhost:8761).
-2. **Config Server**
-   - **Folder:** `config-server` | **Port:** `8888`
-   - Fetches properties from the Git repository.
-3. **API Gateway**
-   - **Folder:** `api-gateway` | **Port:** `8080`
-   - Handles routing and JWT security.
+🌐 Domain Microservices
 
-### Step 2: Domain Microservices (Start Second)
-1. **Auth/Identity Service** (Port: `8085`) - User registration and JWT generation.
-2. **Zone Management Service** (Port: `8081`) - Greenhouse zones and device registration.
-3. **Automation Service** (Port: `8083`) - Rule engine that processes sensor data.
-4. **Crop Inventory Service** (Port: `8084`) - Manages plant lifecycle stages.
-5. **Sensor Telemetry Service** (Port: `8082`) - Acts as a data bridge for telemetry.
+Auth Service: Manages user identity, registration, and JWT token issuance.
+Zone Management Service: Defines greenhouse logical zones and manages environmental thresholds.
+Sensor Telemetry Service: Acts as a real-time data bridge for external IoT telemetry ingestion.
+Automation & Control Service: The system's "Decision Engine" that triggers climate actions (Fan/Heater) based on live data.
+Crop Inventory Service: Monitors plant lifecycles from seedling stages to final harvest.
 
----
+🛠️ Prerequisites & Configuration
 
-## ⚠️ Important Note on External IoT API
-During the final testing phase, the **External IoT Data Provider API (104.211.95.241)** was found to be unreachable or expired. 
+Java: Version 21
+Build Tool: Maven
+Database: MySQL (Ensure schemas are created for each service)
+Centralized Config Repository:(https://github.com/Anuththara2003/agms-microservices-Automated-Greenhouse-Management-System)
 
-To ensure the system remains functional for evaluation, a **Fallback Mocking Mechanism** was implemented in the `Sensor-Telemetry-Service`. 
-- The system attempts to connect to the real API.
-- If the connection fails, it automatically switches to generating simulated telemetry data.
-- This ensures the **End-to-End Workflow** (Sensor -> Automation -> Database Logging) can be fully demonstrated.
+🏁 Startup Instructions (Execution Order)
 
----
+To ensure the system initializes correctly and services register with Eureka, please start them in the following sequence:
+Service Registry (Port: 8761) - Wait for dashboard availability.
+Config Server (Port: 8888) - Ensure it fetches the Git properties.
+Auth Service (Port: 8085) - Required for security validation.
+API Gateway (Port: 8080) - Main entry point.
+Domain Services (Zone, Crop, Automation) - Initialize business logic.
+Sensor Service (Port: 8082) - Start last to initiate data transmission.
 
-## 🔒 Security
-- **Internal Security:** JWT (JSON Web Token) authorization is implemented at the Gateway level.
-- **External Security:** The Sensor Service manages OAuth2/JWT authentication with the external IoT provider.
+🛡️ External API Resilience (Technical Note)
 
-## 🧪 Testing with Postman
-A complete Postman Collection is included in the project root:
-- **File:** `AGMS_Postman_Collection.json`
+The system is architected to interface with a Live External IoT Provider (104.211.95.241).
+Important: During the evaluation phase, if the external API is unreachable or expired, the Sensor-Telemetry-Service will automatically activate a Hybrid Mock Mechanism. This fallback generates simulated data to demonstrate the seamless end-to-end workflow (Sensor -> Automation -> DB Logging) without system downtime.
 
-**Steps:**
-1. Import the collection into Postman.
-2. Run **Auth Service -> Login** to obtain a Bearer Token.
-3. Use this token for all protected routes (Zone, Automation Logs, Crop).
+🧪 API Verification & Testing
 
-## 📊 Monitoring
-All active microservices can be monitored via the Eureka Dashboard:
-- **URL:** [http://localhost:8761](http://localhost:8761)
-- Refer to `docs/eureka-dashboard.png` for a screenshot of the healthy system status.
+A pre-configured Postman Collection is included in the project root for rapid testing.
+File: AGMS_Postman_Collection.json
+How to Test: Import the file, use the /auth/login endpoint to get a token, and include it as a Bearer Token in the Authorization header for all subsequent requests.
 
----
-**Developed by:** [Sandaru Perera]
-**Batch:** GDSE [71]
+📊 System Monitoring
+
+The operational health of the microservice ecosystem can be monitored via the Eureka Dashboard:
+🔗 URL: http://localhost:8761
+(Refer to docs/eureka-dashboard.png for the healthy status reference)
+
+👨‍💻 Developed By
+Name: Sandaru Perera
+Batch: GDSE 71
+Institute: IJSE - Institute of Java and Software Engineering
+Subject: Software Architectures & Design Patterns II (Final Assignment)
